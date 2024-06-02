@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 import mediapipe as mp
 import os
+import sys
 
 import imutils
 import random
 
-#-----------------------------------------------------------------------------
+#=============================================================================
 # Variables
 rostro          = 0     # Indicador si se detecta un rostro que mira al frente
 persona         = 0     # Indicador si hay una persona (con movimiento)
@@ -35,27 +36,35 @@ face_mesh = mp_face_mesh.FaceMesh(max_num_faces=1,
 mp_face_detection = mp.solutions.face_detection
 face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.5, model_selection=1)
 
-#-----------------------------------------------------------------------------
+#=============================================================================
+def print_init():
+    print("\n")
+    print("=================================================================")
+    print("                PROYECTO DE RECONOCIMIENTO FACIAL                ")
+    print("Proyecto para el curso EL6104-1 Taller de Proyectos Tecnológicos ")
+    print("=================================================================")
+    print("\n")
+
 def print_data():
     global persona, rostro, contador, step
-    print(f"Persona: {persona}, Rostro: {rostro}, Contador: {contador}, Step: {step}")
+    sys.stdout.write(f"\rRostro: {rostro}, Parpadeos: {contador}, Persona: {persona}, Step: {step}")
+    sys.stdout.flush()
 
-# Funcion para detectar movimiento
 def detect_mov():
     """
     Variables globales a considerar:
-        parpadeo =  indica si la persona parpadea o no
-        contador =  la cantidad de parpadeos de la persona
-        step =      indica el paso del proceso en que se encuentra
-        cap =       la captura del video
+        persona     = indica si hay una persona o no (una vez verificado su movimiento)
+        rostro      = indica si hay un rostro que mira hacia el frente
+        parpadeo    = indica si la persona parpadea o no
+        contador    = la cantidad de parpadeos de la persona
+        step        = indica el paso del proceso en que se encuentra
+        cap         = la captura del video
     """
     global persona, rostro, parpadeo, contador, step, cap
 
     # Si hay captura entonces se procede
     if cap is not None:
         ret, frame = cap.read()
-        # Copia en caso de tener que guardar parte de la imagen
-        frame_save = frame
         # Redimensionamiento y cambio de color
         frame = imutils.resize(frame,width=1280)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -131,51 +140,13 @@ def detect_mov():
                                             if contador >= 3:
                                                 # Se tiene una persona
                                                 persona = 1
-                                                # Se obtiene imagen del usuario cuando se abran los ojos
+                                                # Se pasa a la siguiente etapa
                                                 if l1 > 10 and l2 > 10:
-                                                    # Cuadrado que encierra el rostro
-                                                    bbox = face.location_data.relative_bounding_box
-                                                    # Se calculan dimensiones que tendra la imagen
-                                                    xb = int(bbox.xmin*width)
-                                                    yb = int(bbox.ymin*height)
-                                                    wb = int(bbox.width*width)
-                                                    hb = int(bbox.height*height)
-
-                                                    # Se le da olgura con un offset
-                                                    offset_w = (offset_x*wb)/100
-                                                    xb = int(xb-offset_w/2)
-                                                    wb = int(wb + offset_w)
-
-                                                    offset_h = (offset_y*hb)/100
-                                                    yb = int(yb-offset_h)
-                                                    hb = int(hb + 1.3*offset_h)
-
-                                                    # Casos de error
-                                                    if xb < 0:
-                                                        xb = 0
-                                                    if yb < 0:
-                                                        yb = 0
-                                                    if wb < 0:
-                                                        wb = 0
-                                                    if hb < 0:
-                                                        hb = 0
-
-                                                    # Recuadro a recortar del frame
-                                                    xf = xb + wb
-                                                    yf = yb + hb
-                                                    cut = frame_save[yb:yf, xb:xf]
-
-                                                    # Se da un usuario aleatorio
-                                                    n = random.randint(10000, 99999)
-                                                    # cv2.imwrite(f"{pathFaces}/{n}.png", cut)
-                                                    print(f"Usuario {n} registrado!")
-
-                                                    # Se pasa a la siguiente etapa
                                                     step = 1
+                                                    print("\nSolicitud entrante...\n")
                     
                                         # No se mira de frente
                                         else:
-                                            cv2.putText(frame,"Mira hacia el frente!", (1070,400), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,255,255), 1)
                                             # Se reinicia el contador
                                             contador = 0
                     
@@ -191,17 +162,28 @@ def detect_mov():
             rostro = 0
     else:
         cap.release()
-    
+
     # Se muestra informacion del frame
     print_data()
 
-
+#=============================================================================
 # Captura de video
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 cap.set(3, 1280)
 cap.set(4, 720)
 
+# Ejecucion inicial para hacer saltar alertas
+detect_mov()
+
+# Mensaje informativo
+print_init()
+
+step = 1
 while True:
-    # Deteccion de movimiento
-    detect_mov()
+    if step == 0:
+        # Deteccion de movimiento
+        detect_mov()
+    elif step == 1:
+        break
+
     
