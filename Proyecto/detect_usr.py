@@ -11,7 +11,7 @@ step            = 0     # Estapa del sistema
 
 start           = 0     # Indicador para comenzar temporizador
 start_time      = 0     # Instante en que se inicia el temporizador
-max_time        = 10    # Tiempo maximo a esperar para detectar a una persona
+max_time        = 5    # Tiempo maximo a esperar para detectar a una persona
 contador_a      = 0     # Contador de frames en que se detecta a una persona
 max_frames      = 20    # Cantidad de frames para confirmar deteccion de una persona
 usr_a           = None  # Usuario detectado por confirmar
@@ -32,14 +32,21 @@ cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 cap.set(3, 1280)
 cap.set(4, 720)
 
+def reset():
+    global start, start_time, contador_a, usr_a
+    start = 0
+    start_time = 0
+    contador_a = 0
+    usr_a = None
+
 def detect_usr():
     global start, start_time, max_time,  contador_a, max_frames, usr_a, step, cap
-
+    
     # Si hay captura entonces se procede
     if cap is not None:
         ret, frame = cap.read()
         if not ret: 
-            return 0
+            return
         # Cambio de color
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame_copy = frame_gray.copy()
@@ -72,37 +79,27 @@ def detect_usr():
                         print(f"¡Bienvenido {usr}! Pase nomas mi rey ^_^")
                         # Finalizacion de la funcion
                         cap.release()
-                        cv2.destroyAllWindows()
-                        return 1
-            else: 
-                print("Usuario desconocido")
+                        # Reseteo de variables globales
+                        reset()
+                        return
             
 			# Solo el primer rostro
             break
 
         k = cv2.waitKey(1)
-        if k == 27:  # Tecla 'ESC' para salir
+        if k == 27:
             cap.release()
-            cv2.destroyAllWindows()
-            return 0
+            return
 
     # En todas las iteraciones se revisa el contador
     if start == 1:
         if time.time()-start_time >= max_time:
             print(f"No hubo reconocimiento en {max_time} segundos :(")
             cap.release()
-            cv2.destroyAllWindows()
-            return 1
+            # Reseteo de variables globales
+            reset()
+            return
 
-def reset():
-    global start, start_time, contador_a, usr_a
-    start = 0
-    start_time = 0
-    contador_a = 0
-    usr_a = None
 
 while True:
-    n = detect_usr()
-    if n == 1:
-        reset()
-        break
+    detect_usr()
