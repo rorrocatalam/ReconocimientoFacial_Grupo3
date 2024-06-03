@@ -36,8 +36,12 @@ face_mesh = mp_face_mesh.FaceMesh(max_num_faces=1,
 mp_face_detection = mp.solutions.face_detection
 face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.5, model_selection=1)
 
+
 #=============================================================================
 def print_init():
+    """
+    Funcion que imprime mensaje inicial del programa
+    """
     print("\n")
     print("=================================================================")
     print("                PROYECTO DE RECONOCIMIENTO FACIAL                ")
@@ -46,19 +50,16 @@ def print_init():
     print("\n")
 
 def print_data():
+    """
+    Funcion de prueba que muestra valores de variables dinamicas
+    """
     global persona, rostro, contador, step
     sys.stdout.write(f"\rRostro: {rostro}, Parpadeos: {contador}, Persona: {persona}, Step: {step}")
     sys.stdout.flush()
 
 def detect_mov():
     """
-    Variables globales a considerar:
-        persona     = indica si hay una persona o no (una vez verificado su movimiento)
-        rostro      = indica si hay un rostro que mira hacia el frente
-        parpadeo    = indica si la persona parpadea o no
-        contador    = la cantidad de parpadeos de la persona
-        step        = indica el paso del proceso en que se encuentra
-        cap         = la captura del video
+    Funcion que detecta el movimiento de un rostro presente frente a la camara
     """
     global persona, rostro, parpadeo, contador, step, cap
 
@@ -166,6 +167,7 @@ def detect_mov():
     # Se muestra informacion del frame
     print_data()
 
+
 #=============================================================================
 # Captura de video
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -178,12 +180,9 @@ detect_mov()
 # Mensaje informativo
 print_init()
 
-step = 1
 while True:
     if step == 0:
         # Deteccion de movimiento
         detect_mov()
     elif step == 1:
         break
-
-    
