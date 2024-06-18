@@ -27,7 +27,10 @@ usr_a           = None  # Usuario detectado por confirmar
 # Parametros para deteccion de rostro
 offset_x        = 20
 offset_y        = 40
-face_threshold  = 0.5 # Umbral detección de rostro
+face_threshold  = 0.5 
+
+# Umbral de deteccion de un usuario
+usr_threshold = 5700
 
 # Herramienta de dibujo para la malla facial
 mp_drawing = mp.solutions.drawing_utils
@@ -241,7 +244,8 @@ def detect_usr():
             result = face_recognizer.predict(rostro)
 
             # Si es alguien de la base de datos se confirma su presencia con varias detecciones
-            if result[1] < 5700:
+            print(f"Umbral actual: {usr_threshold}, Valor detectado: {int(result[1])}")
+            if result[1] < usr_threshold:
                 usr = usr_list[result[0]]
                 # En la primera deteccion se guarda al usuario
                 if start_usr == 0:
