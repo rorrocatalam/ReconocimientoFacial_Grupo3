@@ -5,6 +5,8 @@ import time
 import numpy as np
 import cv2
 import imutils
+from gtts import gTTS
+import pygame
 
 #=============================================================================
 # Variables 
@@ -12,6 +14,18 @@ n_max           = 200   # Cantidad de imagenes a tomar de un rostro
 max_length      = 110   # Largo maximo de los mensajes a mostrar
 
 #=============================================================================
+# Inicializaciones
+pygame.mixer.init()
+
+def play_sound(file_path):
+    """
+    Funcion para reproducir sonidos
+    """
+    pygame.mixer.music.load(file_path)
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
+
 # Direcciones a considerar
 path_db = 'C:/Users/rodri/Desktop/ReconocimientoFacial_Grupo3/Proyecto/User_DataBase'
 usr_name = input("Ingrese su nombre y apellido: ")
@@ -28,10 +42,13 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 faceClassif = cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml')
 n = 0
 
-m1 = f"\r¡Mueve la cabeza lentamente de lado a lado y haz varias expresiones faciales para capturar mejor tu rostro!"
-sys.stdout.write(m1.ljust(max_length) + '\r')
-sys.stdout.flush()
-time.sleep(1)
+# m1 = f"\r¡Mueve la cabeza lentamente de lado a lado y haz varias expresiones faciales para capturar mejor tu rostro!"
+# sys.stdout.write(m1.ljust(max_length) + '\r')
+# sys.stdout.flush()
+# time.sleep(1)
+
+# Audio para dar instrucciones
+play_sound("audios/move.mp3")
 
 # Captura de imagenes
 while True:
@@ -64,9 +81,10 @@ while True:
     sys.stdout.flush()
 cap.release()
 
-m3 = f"\r¡Captura completada! Entrenando modelo...\n"
-sys.stdout.write(m3.ljust(max_length) + '\r')
-sys.stdout.flush()
+# m3 = f"\r¡Captura completada! Entrenando modelo...\n"
+# sys.stdout.write(m3.ljust(max_length) + '\r')
+# sys.stdout.flush()
+play_sound("audios/model.mp3")
 #=============================================================================
 people_list = os.listdir(path_db)
 
@@ -92,4 +110,10 @@ face_recognizer.train(facesData, np.array(labels))
 
 # Almacenamiento del modelo
 face_recognizer.write('modelo_rf.xml')
-print("¡Modelo entrenado y almacenado!\n")
+play_sound("audios/final.mp3")
+# print("¡Modelo entrenado y almacenado!\n")
+
+# Generacion de audio para dar bienvenida
+text =  f"Te damos la bienvenida, {usr_name}"
+tts = gTTS(text=text, lang='es')
+tts.save(f"audios/{usr_name}.mp3")

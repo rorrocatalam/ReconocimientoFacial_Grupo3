@@ -4,10 +4,9 @@ import time
 import cv2
 import numpy as np
 import mediapipe as mp
-
 import imutils
-import random
-
+import pygame
+import serial
 #=============================================================================
 # Variables
 rostro          = 0     # Indicador si se detecta un rostro que mira al frente
@@ -20,7 +19,7 @@ start           = 0     # Indicador para comenzar temporizador
 start_time      = 0     # Instante en que se inicia el temporizador
 max_time        = 5     # Tiempo maximo a esperar para detectar a una persona
 contador_a      = 0     # Contador de frames en que se detecta a una persona
-max_frames      = 60    # Cantidad de frames para confirmar deteccion de una persona
+max_frames      = 20    # Cantidad de frames para confirmar deteccion de una persona
 start_usr       = 0     # Indicador para guardar el usuario detectado
 usr_a           = None  # Usuario detectado por confirmar
 
@@ -60,6 +59,25 @@ path_db = 'C:/Users/rodri/Desktop/ReconocimientoFacial_Grupo3/Proyecto/User_Data
 usr_list = os.listdir(path_db)
 
 #=============================================================================
+# Inicializaciones
+pygame.mixer.init()
+ser = serial.Serial('COM5', 9600)
+time.sleep(2)
+
+# Función para reproducir sonido
+def play_sound(file_path):
+    pygame.mixer.music.load(file_path)
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
+
+def send_command(command):
+    """
+    Funcion para enviar comandos a arduino
+    """
+    ser.write(command.encode())
+    time.sleep(3)
+
 def print_init():
     """
     Funcion que imprime mensaje inicial del programa
@@ -95,7 +113,7 @@ def reset():
     start_usr       = 0
     usr_a           = None
 
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
     cap.set(3, 1280)
     cap.set(4, 720)
 
@@ -258,7 +276,9 @@ def detect_usr():
                     contador_a += 1
                     # Si se reconoce suficientes veces se da el acceso
                     if contador_a >= max_frames:
-                        print(f"\n¡Bienvenido {usr}! Pase nomas mi rey ^_^\n")
+                        send_command('BLUE_ON')
+                        play_sound(f"audios/{usr}.mp3")
+                        # print(f"\n¡Bienvenido {usr}! Pase nomas mi rey ^_^\n")
                         # Finalizacion de la funcion
                         cap.release()
                         # Reseteo de variables globales
@@ -276,7 +296,8 @@ def detect_usr():
     # En todas las iteraciones se revisa el contador
     if start == 1:
         if time.time()-start_time >= max_time:
-            print(f"No hubo reconocimiento en {max_time} segundos :(")
+            send_command('RED_ON')
+            # print(f"No hubo reconocimiento en {max_time} segundos :(")
             cap.release()
             # Reseteo de variables globales
             reset()
