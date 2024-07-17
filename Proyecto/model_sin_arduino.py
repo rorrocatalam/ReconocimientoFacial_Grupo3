@@ -6,7 +6,7 @@ import numpy as np
 import mediapipe as mp
 import imutils
 import pygame
-import serial
+
 #=============================================================================
 # Variables
 rostro          = 0     # Indicador si se detecta un rostro que mira al frente
@@ -63,7 +63,6 @@ num_camera = 0
 #=============================================================================
 # Inicializaciones
 pygame.mixer.init()
-ser = serial.Serial('COM5', 9600)
 time.sleep(2)
 
 # Función para reproducir sonido
@@ -72,13 +71,6 @@ def play_sound(file_path):
     pygame.mixer.music.play()
     while pygame.mixer.music.get_busy():
         pygame.time.Clock().tick(10)
-
-def send_command(command):
-    """
-    Funcion para enviar comandos a arduino
-    """
-    ser.write(command.encode())
-    time.sleep(3)
 
 def print_init():
     """
@@ -278,7 +270,6 @@ def detect_usr():
                     contador_a += 1
                     # Si se reconoce suficientes veces se da el acceso
                     if contador_a >= max_frames:
-                        send_command('BLUE_ON')
                         play_sound(f"audios/{usr}.mp3")
                         # print(f"\n¡Bienvenido {usr}! Pase nomas mi rey ^_^\n")
                         # Finalizacion de la funcion
@@ -298,7 +289,6 @@ def detect_usr():
     # En todas las iteraciones se revisa el contador
     if start == 1:
         if time.time()-start_time >= max_time:
-            send_command('RED_ON')
             # print(f"No hubo reconocimiento en {max_time} segundos :(")
             cap.release()
             # Reseteo de variables globales
